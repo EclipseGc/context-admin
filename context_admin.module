@@ -1,0 +1,184 @@
+<?php
+
+/**
+ * Implementation of hook_views_api().
+ */
+function context_admin_views_api() {
+  return array(
+    'api' => 2,
+    'path' => drupal_get_path('module', 'context_admin') . '/includes',
+  );
+}
+
+function context_admin_ctools_plugin_directory($module, $plugin) {
+  if ($module == 'page_manager' || $module == 'ctools') {
+    return 'plugins/' . $plugin;
+  }
+}
+
+function context_admin_get_path($file, $base_path = FALSE, $module = 'context_admin') {
+  $output = $base_path ? base_path() : '';
+  return $output . drupal_get_path('module', $module) . '/' . $file;
+}
+
+function context_admin_load($name) {
+  $cache = new stdClass();
+  $cache->task_name = $name;
+  return $cache;
+}
+
+function context_admin_get_page_cache($name) {
+  ctools_include('object-cache');
+  $cache = ctools_object_cache_get('context_admin', $name);
+  if (!$cache) {
+    $cache = context_admin_load($name);
+    $cache->locked = ctools_object_cache_test('context_admin', $name);
+  }
+
+  return $cache;
+}
+
+/**
+ * Store changes to a task handler in the object cache.
+ */
+function context_admin_set_page_cache($name, $page) {
+  ctools_include('object-cache');
+  $cache = ctools_object_cache_set('context_admin', $name, $page);
+}
+
+/**
+ * Remove an item from the object cache.
+ */
+function context_admin_clear_page_cache($name) {
+  ctools_include('object-cache');
+  ctools_object_cache_clear('context_admin', $name);
+}
+
+function context_admin_context_admin() {
+  $admins = array();
+  $admins['context_admin_node_create_menu'] = array(
+    'title' => t('Create Node Type'),
+    'file' => 'includes/node_create_menu',
+    'type' => 'inc',
+    'module' => 'context_admin',
+    'context' => 'global',
+  );
+  if (module_exists('views_bulk_operations')) {
+    $admins['context_admin_views_bulk_menu'] = array(
+      'title' => t('Views Administration'),
+      'file' => 'includes/views_bulk_menu',
+      'type' => 'inc',
+      'module' => 'context_admin',
+      'context' => 'global',
+    );
+  }
+  $admins['context_admin_taxonomy_list_menu'] = array(
+    'title' => t('Vocabulary Options'),
+    'file' => 'includes/taxonomy_list_menu',
+    'type' => 'inc',
+    'module' => 'context_admin',
+    'context' => 'global',
+  );
+  $admins['context_admin_term_options_menu'] = array(
+    'title' => t('Taxonomy Term Options'),
+    'file' => 'includes/term_options_menu',
+    'type' => 'inc',
+    'module' => 'context_admin',
+    'context' => 'term',
+  );
+  return $admins;
+}
+
+function context_admin_invoke_api($op = 'list', $key = NULL) {
+  $return = array();
+  foreach (module_implements('context_admin') as $name) {
+    $function = $name .'_context_admin';
+    $result = $function();
+    if (isset($result) && is_array($result)) {
+      $return_options = array_merge($return, $result);
+    }
+    else if (isset($result)) {
+      $return_options[] = $result;
+    }
+  }
+  switch ($op) {
+    case 'list':
+      foreach ($return_options as $callback => $item) {
+        $return[$callback] = $item['title'];
+      }
+      break;
+    case 'full':
+      return $return_options;
+    case 'individual':
+      if ($key) {
+        $return = $return_options[$key];
+      }
+      else {
+        drupal_set_message(t('You must provide a key if you want an individual context admin result'), 'error');
+        return;
+      }
+      break;
+    case 'context':
+      foreach ($return_options as $callback => $item) {
+        if ($item['context'] == $key) {
+          $return[$callback] = $item;
+        }
+      }
+      break;
+  }
+  return $return;
+}
+
+function context_admin_form_alter(&$form, $form_state, $form_id) {
+  // Checking to make sure that we're on a context_admin generated node form
+  $page = page_manager_get_current_page();
+  if ($form_id == $form['#node']->type .'_node_form') {
+    if ($page['handler']->subtask == 'add_page' && $page['handler']->conf['context_admin_sub_page']) {
+      foreach ($page['contexts'] as $context) {
+        if ($context->type == 'node') {
+          $parent_id = $context->argument;
+          $results = db_query("SELECT menu_name, mlid FROM {menu_links} WHERE link_path = 'node/%d' AND module = 'menu'", $parent_id);
+          while ($result = db_fetch_object($results)) {
+            $form['menu_parent'] = array(
+              '#type' => 'value',
+              '#value' => $result->mlid,
+            );
+            $form['menu_name'] = array(
+              '#type' => 'value',
+              '#value' => $result->menu_name,
+            );
+            break;
+          }
+          break;
+        }
+      }
+      $form['context_admin_add_menu'] = array(
+        '#type' => 'value',
+        '#value' => TRUE,
+      );
+    }
+  }
+  switch($form_id) {
+    case 'context_admin_taxonomy_list_menu_taxonomy_form_vocabulary':
+      unset($form['delete']);
+      break;
+  }
+}
+
+function context_admin_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
+  switch ($op) {
+    case 'insert':
+      if ($node->context_admin_add_menu) {
+        if(!$node->menu['link_title']) {
+          $item = array(
+            'link_title' => $node->title,
+            'menu_name' => $node->menu_name,
+            'plid' => $node->menu_parent,
+            'link_path' => 'node/'. $node->nid,
+          );
+          menu_link_save($item);
+        }
+      }
+      break;
+  }
+}
