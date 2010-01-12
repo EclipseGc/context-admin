@@ -249,7 +249,6 @@ function context_admin_menu_context_edit_content(&$form, &$form_state) {
   $options = array();
   foreach ($arguments as $key => $argument) {
     $contexts[$key] = context_admin_invoke_api('context', $key);
-    //dsm($contexts);
     foreach($contexts[$key] as $callback => $admin) {
       $options[$callback] = $admin['title'];
     }
@@ -294,7 +293,9 @@ function context_admin_menu_context_edit_content_settings(&$form, &$form_state) 
 function context_admin_menu_context_edit_content_settings_submit(&$form, &$form_state) {
   $cache = context_admin_get_page_cache($form_state['page']->subtask_id);
   $callback = $form_state['page']->context_admin_options ? $form_state['page']->context_admin_options : $cache->handlers[$cache->task_id .'_'. $cache->subtask_id .'_menu_context']->conf['context_admin_options'];
-  $form_state += module_invoke($callback, 'content_form_submit', $form, $form_state);
+  if (function_exists($callback .'_content_form_submit')) {
+    $form_state += module_invoke($callback, 'content_form_submit', $form, $form_state);
+  }
 }
 
 function context_admin_menu_context_save(&$handler, $update) {

@@ -86,6 +86,13 @@ function context_admin_context_admin() {
     'module' => 'context_admin',
     'context' => 'term',
   );
+  $admins['context_admin_admin_section'] = array(
+    'title' => t('Administrative Section'),
+    'file' => 'includes/admin_section',
+    'type' => 'inc',
+    'module' => 'context_admin',
+    'context' => 'global',
+  );
   return $admins;
 }
 
