@@ -42,6 +42,9 @@ function context_admin_term_options_menu_render_page($handler, $base_contexts, $
 }
 
 function context_admin_term_options_menu_admin_term_edit($tid) {
+  if (!is_numeric($tid)) {
+    $tid = db_result(db_query("SELECT tid FROM {term_data} WHERE name = '%s'", $tid));
+  }
   if ($term = (array)taxonomy_get_term($tid)) {
     return drupal_get_form('context_admin_term_options_menu_taxonomy_form_term', taxonomy_vocabulary_load($term['vid']), $term);
   }
