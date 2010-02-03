@@ -140,7 +140,7 @@ function context_admin_form_alter(&$form, $form_state, $form_id) {
   // Checking to make sure that we're on a context_admin generated node form
   $page = page_manager_get_current_page();
   if ($form_id == $form['#node']->type .'_node_form') {
-    if ($page['handler']->subtask == 'add_page' && $page['handler']->conf['context_admin_sub_page']) {
+    if ($page['handler']->conf['context_admin_options_items'] == $form['#node']->type && $page['handler']->conf['context_admin_sub_page']) {
       foreach ($page['contexts'] as $context) {
         if ($context->type == 'node') {
           $parent_id = $context->argument;
@@ -176,7 +176,7 @@ function context_admin_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
   switch ($op) {
     case 'insert':
       if ($node->context_admin_add_menu) {
-        if(!$node->menu['link_title']) {
+        if(!$node->menu['link_title'] && ($node->menu_name && $node->menu_parent)) {
           $item = array(
             'link_title' => $node->title,
             'menu_name' => $node->menu_name,
