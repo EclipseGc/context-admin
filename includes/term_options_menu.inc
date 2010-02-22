@@ -11,6 +11,7 @@ function context_admin_term_options_menu_content_form(&$form, &$form_state, $cac
     '#title' => t('Term Options'),
     '#required' => TRUE,
     '#options' => array(
+      'add' => t('Add Term'),
       'term' => t('Edit Term'),
       'vocabulary' => t('Edit Vocabulary'),
     ),
@@ -29,6 +30,8 @@ function context_admin_term_options_menu_content_form_submit(&$form, &$form_stat
 function context_admin_term_options_menu_render_page($handler, $base_contexts, $args, $test = TRUE) {
   module_load_include('inc', 'taxonomy', 'taxonomy.admin');
   switch($handler->conf['context_admin_term_options']) {
+    case 'add':
+      return context_admin_term_options_menu_admin_term_edit($args[0], TRUE);
     case 'term':
       return context_admin_term_options_menu_admin_term_edit($args[0]);
     case 'vocabulary':
@@ -41,18 +44,26 @@ function context_admin_term_options_menu_render_page($handler, $base_contexts, $
   }
 }
 
-function context_admin_term_options_menu_admin_term_edit($tid) {
+function context_admin_term_options_menu_admin_term_edit($tid, $add = NULL) {
   if (!is_numeric($tid)) {
     $tid = db_result(db_query("SELECT tid FROM {term_data} WHERE name = '%s'", $tid));
   }
   if ($term = (array)taxonomy_get_term($tid)) {
-    return drupal_get_form('context_admin_term_options_menu_taxonomy_form_term', taxonomy_vocabulary_load($term['vid']), $term);
+    if (!is_null($add)) {
+      return drupal_get_form('context_admin_term_options_menu_taxonomy_form_term', taxonomy_vocabulary_load($term['vid']), array(), TRUE);
+    }
+    else {
+      return drupal_get_form('context_admin_term_options_menu_taxonomy_form_term', taxonomy_vocabulary_load($term['vid']), $term);
+    }
   }
   return drupal_not_found();
 }
 
-function context_admin_term_options_menu_taxonomy_form_term(&$form_state, $vocabulary, $edit = array()) {
+function context_admin_term_options_menu_taxonomy_form_term(&$form_state, $vocabulary, $edit = array(), $add = NULL) {
   $form = taxonomy_form_term(&$form_state, $vocabulary, $edit);
+  if ($add) {
+    $form['#add'] = TRUE;
+  }
   return $form;
 }
 

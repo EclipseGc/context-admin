@@ -169,6 +169,11 @@ function context_admin_form_alter(&$form, $form_state, $form_id) {
     case 'context_admin_taxonomy_list_menu_taxonomy_form_vocabulary':
       unset($form['delete']);
       break;
+    case 'context_admin_term_options_menu_taxonomy_form_term':
+      if ($form['#add'] && arg(2)) {
+        $form['advanced']['parent']['#default_value'] = array(arg(2));
+      }
+      break;
   }
 }
 
