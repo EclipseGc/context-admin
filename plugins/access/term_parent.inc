@@ -69,6 +69,9 @@ function context_access_term_parent_access_check($conf, $context) {
  * context.
  */
 function context_access_term_parent_access_restrictions($conf, &$context) {
+  if (!is_array($conf['parent'])) {
+    $conf['parent'] = array($conf['parent']);
+  }
   if (isset($context->restrictions['parent'])) {
     $context->restrictions['parent'] = array_unique(array_merge($context->restrictions['parent'], array_keys(array_filter($conf['parent']))));
   }

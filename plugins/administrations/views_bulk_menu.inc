@@ -1,5 +1,17 @@
 <?php
 
+/**
+ * Plugins are described by creating a $plugin array which will be used
+ * by the system that includes this file.
+ */
+
+$plugin = array(
+  'title' => t('Views Administration'),
+  'description' => t('Provides a generic Views Bulk Operations based view that should work for most node type needs.'),
+  'context' => 'global',
+  'restriction arguments' => array('views_bulk_operations'),
+);
+
 function context_admin_views_bulk_menu_content_form(&$form, &$form_state, $cache = NULL) {
   $default_type = $form_state['page']->context_admin_views_bulk_node_type ? $form_state['page']->context_admin_views_bulk_node_type : $cache->handlers[$cache->task_id .'_'. $cache->subtask_id .'_menu_context']->conf['context_admin_views_bulk_node_type'];
   $default_pub = $form_state['page']->context_admin_views_bulk_published ? $form_state['page']->context_admin_views_bulk_published : $cache->handlers[$cache->task_id .'_'. $cache->subtask_id .'_menu_context']->conf['context_admin_views_bulk_published'];

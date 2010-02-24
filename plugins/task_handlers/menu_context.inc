@@ -248,7 +248,7 @@ function context_admin_menu_context_edit_content(&$form, &$form_state) {
   $contexts = array();
   $options = array();
   foreach ($arguments as $key => $argument) {
-    $contexts[$key] = context_admin_invoke_api('context', $key);
+    $contexts[$key] = context_admin_get_plugins('administrations', array('context' => $key));
     foreach($contexts[$key] as $callback => $admin) {
       $options[$callback] = $admin['title'];
     }
@@ -272,16 +272,10 @@ function context_admin_menu_context_edit_content_settings(&$form, &$form_state) 
   $cache = context_admin_get_page_cache($form_state['page']->subtask_id);
   
   $callback = $form_state['page']->context_admin_options ? $form_state['page']->context_admin_options : $cache->handlers[$cache->task_id .'_'. $cache->subtask_id .'_menu_context']->conf['context_admin_options'];
-  $full = context_admin_invoke_api('individual', $callback);
-  if ($full['file']) {
-    if ($full['type'] && $full['module']) {
-      module_load_include($full['type'], $full['module'], $full['file']);
-    }
-    else {
-      drupal_set_message(t('A file was specified, but either the type or the module information was missing.  The offending item key is @callback', array('@callback' => $callback)), 'error');
-    }
-  }
-  $form += module_invoke($callback, 'content_form', $form, $form_state, $cache);
+  $plugin = context_admin_get_plugins('administrations', array('id' => $callback));
+  $dir = module_invoke($plugin['module'], 'ctools_plugin_directory', 'context_admin', 'administrations');
+  ctools_include($plugin['name'], $plugin['module'], $dir);
+  $form += module_invoke($plugin['module'] .'_'. $callback, 'content_form', $form, $form_state, $cache);
 }
 
 /**
@@ -293,38 +287,27 @@ function context_admin_menu_context_edit_content_settings(&$form, &$form_state) 
 function context_admin_menu_context_edit_content_settings_submit(&$form, &$form_state) {
   $cache = context_admin_get_page_cache($form_state['page']->subtask_id);
   $callback = $form_state['page']->context_admin_options ? $form_state['page']->context_admin_options : $cache->handlers[$cache->task_id .'_'. $cache->subtask_id .'_menu_context']->conf['context_admin_options'];
-  if (function_exists($callback .'_content_form_submit')) {
-    $form_state += module_invoke($callback, 'content_form_submit', $form, $form_state);
+  $plugin = context_admin_get_plugins('administrations', array('id' => $callback));
+  if (function_exists($plugin['module'] .'_'. $callback .'_content_form_submit')) {
+    $form_state += module_invoke($plugin['module'] .'_'. $callback, 'content_form_submit', $form, $form_state);
   }
 }
 
 function context_admin_menu_context_save(&$handler, $update) {
   $callback = $handler->conf['context_admin_options'];
-  $full = context_admin_invoke_api('individual', $callback);
-  if ($full['file']) {
-    if ($full['type'] && $full['module']) {
-      module_load_include($full['type'], $full['module'], $full['file']);
-    }
-    else {
-      drupal_set_message(t('A file was specified, but either the type or the module information was missing.  The offending item key is @callback', array('@callback' => $callback)), 'error');
-    }
-  }
-  module_invoke($callback, 'save', $handler, $update);
+  $plugin = context_admin_get_plugins('administrations', array('id' => $callback));
+  $dir = module_invoke($plugin['module'], 'ctools_plugin_directory', 'context_admin', 'administrations');
+  ctools_include($plugin['name'], $plugin['module'], $dir);
+  module_invoke($plugin['module'] .'_'. $callback, 'save', $handler, $update);
   context_admin_clear_page_cache('context_admin', $handler->subtask);
 }
 
 function context_admin_menu_context_delete(&$handler) {
   $callback = $handler->conf['context_admin_options'];
-  $full = context_admin_invoke_api('individual', $callback);
-  if ($full['file']) {
-    if ($full['type'] && $full['module']) {
-      module_load_include($full['type'], $full['module'], $full['file']);
-    }
-    else {
-      drupal_set_message(t('A file was specified, but either the type or the module information was missing.  The offending item key is @callback', array('@callback' => $callback)), 'error');
-    }
-  }
-  module_invoke($callback, 'delete', $handler, $update);
+  $plugin = context_admin_get_plugins('administrations', array('id' => $callback));
+  $dir = module_invoke($plugin['module'], 'ctools_plugin_directory', 'context_admin', 'administrations');
+  ctools_include($plugin['name'], $plugin['module'], $dir);
+  module_invoke($plugin['module'] .'_'. $callback, 'delete', $handler, $update);
   context_admin_clear_page_cache('context_admin', $handler->subtask);
 }
 
@@ -347,15 +330,9 @@ function context_admin_menu_context_render($handler, $base_contexts, $args, $tes
     'handler' => $handler,
   ));
   $callback = $handler->conf['context_admin_options'];
-  $full = context_admin_invoke_api('individual', $callback);
-  if ($full['file']) {
-    if ($full['type'] && $full['module']) {
-      module_load_include($full['type'], $full['module'], $full['file']);
-    }
-    else {
-      drupal_set_message(t('A file was specified, but either the type or the module information was missing.  The offending item key is @callback', array('@callback' => $callback)), 'error');
-    }
-  }
-  $info['content'] = module_invoke($callback, 'render_page', $handler, $base_contexts, $args, $test);
+  $plugin = context_admin_get_plugins('administrations', array('id' => $callback));
+  $dir = module_invoke($plugin['module'], 'ctools_plugin_directory', 'context_admin', 'administrations');
+  ctools_include($plugin['name'], $plugin['module'], $dir);
+  $info['content'] = module_invoke($plugin['module'] .'_'. $callback, 'render_page', $handler, $base_contexts, $args, $test);
   return $info;
 }

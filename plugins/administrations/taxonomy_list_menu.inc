@@ -1,5 +1,16 @@
 <?php
 
+/**
+ * Plugins are described by creating a $plugin array which will be used
+ * by the system that includes this file.
+ */
+
+$plugin = array(
+  'title' => t('Vocabulary Options'),
+  'description' => t('Provides a number of different vocabulary related functions to allow for contextualized vocabulary maintenance.'),
+  'context' => 'global',
+);
+
 function context_admin_taxonomy_list_menu_content_form(&$form, &$form_state, $cache = NULL) {
   $default = $form_state['page']->context_admin_vocabulary ? $form_state['page']->context_admin_vocabulary : $cache->handlers[$cache->task_id .'_'. $cache->subtask_id .'_menu_context']->conf['context_admin_vocabulary'];
   $default_option = $form_state['page']->context_admin_vocabulary_options ? $form_state['page']->context_admin_vocabulary_options : $cache->handlers[$cache->task_id .'_'. $cache->subtask_id .'_menu_context']->conf['context_admin_vocabulary_options'];
@@ -61,4 +72,10 @@ function context_admin_taxonomy_list_menu_taxonomy_form_vocabulary($form_state, 
 function context_admin_taxonomy_list_menu_taxonomy_form_vocabulary_submit($form, &$form_state) {
   taxonomy_form_vocabulary_submit($form, $form_state);
   $form_state['redirect'] = $_GET['q'];
+}
+
+function context_admin_taxonomy_list_menu_form_alter(&$form, $form_state, $form_id) {
+  if ($form_id == 'context_admin_taxonomy_list_menu_taxonomy_form_vocabulary') {
+    unset($form['delete']);
+  }
 }

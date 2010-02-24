@@ -1,5 +1,17 @@
 <?php
 
+/**
+ * Plugins are described by creating a $plugin array which will be used
+ * by the system that includes this file.
+ */
+
+$plugin = array(
+  'title' => t('Create Node'),
+  'description' => t('Allows the creation of a particular node type.  This circumvents the typical drupal access controls on node creation.'),
+  'context' => 'global',
+);
+
+
 function context_admin_node_create_menu_content_form(&$form, &$form_state, $cache = NULL) {
   $default = $form_state['page']->context_admin_options_items ? $form_state['page']->context_admin_options_items : $cache->handlers[$cache->task_id .'_'. $cache->subtask_id .'_menu_context']->conf['context_admin_options_items'];
   $types = node_get_types();
@@ -58,6 +70,31 @@ function context_admin_node_create_menu_render_page($handler, $base_contexts, $a
     drupal_set_title(t('Create @name', array('@name' => $types[$type]->name)));
     $output = drupal_get_form($type .'_node_form', $node);
   }
-
   return $output;
+}
+
+function context_admin_node_create_menu_nodeapi(&$node, $op, $a3, $a4) {
+  switch ($op) {
+    case 'insert':
+      $page = page_manager_get_current_page();
+      if ($page['handler']->conf['context_admin_sub_page']) {
+        foreach ($page['contexts'] as $context) {
+          if ($context->type == 'node') {
+            $parent_id = $context->argument;
+            $results = db_query("SELECT menu_name, mlid FROM {menu_links} WHERE link_path = 'node/%d' AND module = 'menu'", $parent_id);
+            $result = db_fetch_object($results);
+            if ($result) {
+              $item = array(
+                'link_title' => $node->title,
+                'menu_name' => $result->menu_name,
+                'plid' => $result->mlid,
+                'link_path' => 'node/'. $node->nid,
+              );
+              menu_link_save($item);
+            }
+          }
+        }
+      }
+      break;
+  }
 }

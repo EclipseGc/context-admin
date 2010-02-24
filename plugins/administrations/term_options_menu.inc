@@ -1,5 +1,16 @@
 <?php
 
+/**
+ * Plugins are described by creating a $plugin array which will be used
+ * by the system that includes this file.
+ */
+
+$plugin = array(
+  'title' => t('Taxonomy Term Options'),
+  'description' => t('Provides a number of different term related functions to allow for contextualized taxonomy term maintenance.'),
+  'context' => 'term',
+);
+
 function context_admin_term_options_menu_content_form(&$form, &$form_state, $cache = NULL) {
   $default_options = $form_state['page']->context_admin_term_options ? $form_state['page']->context_admin_term_options : $cache->handlers[$cache->task_id .'_'. $cache->subtask_id .'_menu_context']->conf['context_admin_term_options'];
   $form['help'] = array(
@@ -70,4 +81,12 @@ function context_admin_term_options_menu_taxonomy_form_term(&$form_state, $vocab
 function context_admin_term_options_menu_taxonomy_form_term_submit($form, &$form_state) {
   taxonomy_form_term_submit($form, &$form_state);
   $form_state['redirect'] = $_GET['q'];
+}
+
+function context_admin_term_options_menu_form_alter(&$form, $form_state, $form_id) {
+  if ($form_id == 'context_admin_term_options_menu_taxonomy_form_term') {
+    if ($form['#add'] && arg(2)) {
+      $form['advanced']['parent']['#default_value'] = array(arg(2));
+    }
+  }
 }
