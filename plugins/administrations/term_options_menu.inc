@@ -12,7 +12,12 @@ $plugin = array(
 );
 
 function context_admin_term_options_menu_content_form(&$form, &$form_state, $cache = NULL) {
-  $default_options = $form_state['page']->context_admin_term_options ? $form_state['page']->context_admin_term_options : $cache->handlers[$cache->task_id .'_'. $cache->subtask_id .'_menu_context']->conf['context_admin_term_options'];
+  if (!is_null($form_state['handler_id'])) {
+    $default_options = $form_state['page']->handlers[$form_state['handler_id']]->conf['context_admin_term_options'] ? $form_state['page']->handlers[$form_state['handler_id']]->conf['context_admin_term_options'] : $cache->handlers[$form_state['handler_id']]->conf['context_admin_term_options'];
+  }
+  else {
+    $default_options = $form_state['page']->new_handler->conf['context_admin_term_options'];
+  }
   $form['help'] = array(
     '#type' => 'markup',
     '#value' => t('Taxonomy edit tabs can be limited via the access controls/selection criteria.  If they are not limited, they will apply to ALL terms within your site.'),
@@ -33,7 +38,12 @@ function context_admin_term_options_menu_content_form(&$form, &$form_state, $cac
 
 function context_admin_term_options_menu_content_form_submit(&$form, &$form_state) {
   $cache = context_admin_get_page_cache($form_state['page']->subtask_id);
-  $form_state['page']->handlers[$form_state['page']->task_id .'_'. $form_state['page']->subtask_id .'_menu_context']->conf['context_admin_term_options'] = $form_state['values']['context_admin_term_options'];
+  if (!is_null($form_state['handler_id'])) {
+    $form_state['page']->handlers[$form_state['handler_id']]->conf['context_admin_term_options'] = $form_state['values']['context_admin_term_options'];
+  }
+  else {
+    $form_state['page']->new_handler->conf['context_admin_term_options'] = $form_state['values']['context_admin_term_options'];
+  }
   context_admin_set_page_cache($form_state['page']->subtask_id, $form_state['page']);
   return $form_state;
 }
@@ -46,7 +56,8 @@ function context_admin_term_options_menu_render_page($handler, $base_contexts, $
     case 'term':
       return context_admin_term_options_menu_admin_term_edit($args[0]);
     case 'vocabulary':
-      module_load_include('inc', 'context_admin', 'includes/taxonomy_list_menu');
+      $dir = module_invoke('context_admin', 'ctools_plugin_directory', 'context_admin', 'administrations');
+      ctools_include('taxonomy_list_menu', 'context_admin', $dir);
       if ($term = (array)taxonomy_get_term($args[0])) {
         $form = drupal_get_form('context_admin_taxonomy_list_menu_taxonomy_form_vocabulary', (array)taxonomy_vocabulary_load($term['vid']));
         return $form;

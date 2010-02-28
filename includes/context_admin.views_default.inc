@@ -9,8 +9,8 @@ function context_admin_views_default_views() {
     $cache = page_manager_cache_load($task_id);
     page_manager_clear_page_cache($task_id);
     foreach ($cache->handlers as $handler) {
-      if ($handler->conf['context_admin_options'] == 'context_admin_views_bulk_menu') {
-        $view_name = $handler->subtask;
+      if ($handler->conf['context_admin_options'] == 'views_bulk_menu') {
+        $view_name = $handler->name;
         $type = $handler->conf['context_admin_views_bulk_node_type'];
         $pub = $handler->conf['context_admin_views_bulk_published'];
         if ($pub == 'published') {

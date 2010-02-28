@@ -13,7 +13,12 @@ $plugin = array(
 
 
 function context_admin_node_create_menu_content_form(&$form, &$form_state, $cache = NULL) {
-  $default = $form_state['page']->context_admin_options_items ? $form_state['page']->context_admin_options_items : $cache->handlers[$cache->task_id .'_'. $cache->subtask_id .'_menu_context']->conf['context_admin_options_items'];
+  if (!is_null($form_state['handler_id'])) {
+    $default = $form_state['page']->handlers[$form_state['handler_id']]->conf['context_admin_options_items'] ? $form_state['page']->handlers[$form_state['handler_id']]->conf['context_admin_options_items'] : $cache->handlers[$form_state['handler_id']]->conf['context_admin_options_items'];
+  }
+  else {
+    $default = $form_state['page']->new_handler->conf['context_admin_options_items'];
+  }
   $types = node_get_types();
   foreach ($types as $key => $type) {
     $options[$key] = $type->name;
@@ -27,7 +32,12 @@ function context_admin_node_create_menu_content_form(&$form, &$form_state, $cach
   );
   foreach($form_state['page']->subtask['subtask']->arguments as $context => $args) {
     if ($context == 'node') {
-      $sub = $form_state['page']->context_admin_sub_page ? $form_state['page']->context_admin_sub_page : $cache->handlers[$cache->task_id .'_'. $cache->subtask_id .'_menu_context']->conf['context_admin_sub_page'];
+      if (!is_null($form_state['handler_id'])) {
+        $sub = $form_state['page']->handlers[$form_state['handler_id']]->conf['context_admin_sub_page'] ? $form_state['page']->handlers[$form_state['handler_id']]->conf['context_admin_sub_page'] : $cache->handlers[$form_state['handler_id']]->conf['context_admin_sub_page'];
+      }
+      else {
+        $sub = $form_state['page']->new_handler->conf['context_admin_sub_page'];
+      }
       $form['context_admin_sub_page'] = array(
         '#type' => 'checkbox',
         '#title' => t('Create as sub node'),
@@ -41,9 +51,19 @@ function context_admin_node_create_menu_content_form(&$form, &$form_state, $cach
 
 function context_admin_node_create_menu_content_form_submit(&$form, &$form_state) {
   $cache = context_admin_get_page_cache($form_state['page']->subtask_id);
-  $form_state['page']->handlers[$form_state['page']->task_id .'_'. $form_state['page']->subtask_id .'_menu_context']->conf['context_admin_options_items'] = $form_state['values']['context_admin_options_items'];
+  if (!is_null($form_state['handler_id'])) {
+    $form_state['page']->handlers[$form_state['handler_id']]->conf['context_admin_options_items'] = $form_state['values']['context_admin_options_items'];
+  }
+  else {
+    $form_state['page']->new_handler->conf['context_admin_options_items'] = $form_state['values']['context_admin_options_items'];
+  }
   if ($form_state['values']['context_admin_sub_page']) {
-    $form_state['page']->handlers[$form_state['page']->task_id .'_'. $form_state['page']->subtask_id .'_menu_context']->conf['context_admin_sub_page'] = $form_state['values']['context_admin_sub_page'];
+    if (!is_null($form_state['handler_id'])) {
+      $form_state['page']->handlers[$form_state['handler_id']]->conf['context_admin_sub_page'] = $form_state['values']['context_admin_sub_page'];
+    }
+    else {
+      $form_state['page']->new_handler->conf['context_admin_sub_page'] = $form_state['values']['context_admin_sub_page'];
+    }
   }
   context_admin_set_page_cache($form_state['page']->subtask_id, $form_state['page']);
   return $form_state;

@@ -13,8 +13,14 @@ $plugin = array(
 );
 
 function context_admin_views_bulk_menu_content_form(&$form, &$form_state, $cache = NULL) {
-  $default_type = $form_state['page']->context_admin_views_bulk_node_type ? $form_state['page']->context_admin_views_bulk_node_type : $cache->handlers[$cache->task_id .'_'. $cache->subtask_id .'_menu_context']->conf['context_admin_views_bulk_node_type'];
-  $default_pub = $form_state['page']->context_admin_views_bulk_published ? $form_state['page']->context_admin_views_bulk_published : $cache->handlers[$cache->task_id .'_'. $cache->subtask_id .'_menu_context']->conf['context_admin_views_bulk_published'];
+  if (!is_null($form_state['handler_id'])) {
+    $default_type = $form_state['page']->handlers[$form_state['handler_id']]->conf['context_admin_views_bulk_node_type'] ? $form_state['page']->handlers[$form_state['handler_id']]->conf['context_admin_views_bulk_node_type'] : $cache->handlers[$form_state['handler_id']]->conf['context_admin_views_bulk_node_type'];
+    $default_pub = $form_state['page']->handlers[$form_state['handler_id']]->conf['context_admin_views_bulk_published'] ? $form_state['page']->handlers[$form_state['handler_id']]->conf['context_admin_views_bulk_published'] : $cache->handlers[$form_state['handler_id']]->conf['context_admin_views_bulk_published'];
+  }
+  else {
+    $default_type = $form_state['page']->new_handler->conf['context_admin_views_bulk_node_type'];
+    $default_pub = $form_state['page']->new_handler->conf['context_admin_views_bulk_published'];
+  }
   $types = node_get_types();
   foreach ($types as $key => $type) {
     $options[$key] = $type->name;
@@ -42,14 +48,20 @@ function context_admin_views_bulk_menu_content_form(&$form, &$form_state, $cache
 
 function context_admin_views_bulk_menu_content_form_submit(&$form, &$form_state) {
   $cache = context_admin_get_page_cache($form_state['page']->subtask_id);
-  $form_state['page']->handlers[$form_state['page']->task_id .'_'. $form_state['page']->subtask_id .'_menu_context']->conf['context_admin_views_bulk_node_type'] = $form_state['values']['context_admin_views_bulk_node_type'];
-  $form_state['page']->handlers[$form_state['page']->task_id .'_'. $form_state['page']->subtask_id .'_menu_context']->conf['context_admin_views_bulk_published'] = $form_state['values']['context_admin_views_bulk_published'];
+  if (!is_null($form_state['handler_id'])) {
+    $form_state['page']->handlers[$form_state['handler_id']]->conf['context_admin_views_bulk_node_type'] = $form_state['values']['context_admin_views_bulk_node_type'];
+    $form_state['page']->handlers[$form_state['handler_id']]->conf['context_admin_views_bulk_published'] = $form_state['values']['context_admin_views_bulk_published'];
+  }
+  else {
+    $form_state['page']->new_handler->conf['context_admin_views_bulk_node_type'] = $form_state['values']['context_admin_views_bulk_node_type'];
+    $form_state['page']->new_handler->conf['context_admin_views_bulk_published'] = $form_state['values']['context_admin_views_bulk_published'];
+  }
   context_admin_set_page_cache($form_state['page']->subtask_id, $form_state['page']);
   return $form_state;
 }
 
 function context_admin_views_bulk_menu_render_page($handler, $base_contexts, $args, $test = TRUE) {
-  return views_embed_view($handler->subtask);
+  return views_embed_view($handler->name);
 }
 
 function context_admin_views_bulk_menu_save($handler, $update) {

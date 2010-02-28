@@ -42,6 +42,7 @@ function context_admin_get_page_cache($name) {
  * Store changes to a task handler in the object cache.
  */
 function context_admin_set_page_cache($name, $page) {
+  $page->changed = TRUE;
   ctools_include('object-cache');
   $cache = ctools_object_cache_set('context_admin', $name, $page);
 }
@@ -96,7 +97,10 @@ function context_admin_form_alter(&$form, $form_state, $form_id) {
     $plugin = context_admin_get_plugins('administrations', array('id' => $callback));
     $dir = module_invoke($plugin['module'], 'ctools_plugin_directory', 'context_admin', 'administrations');
     ctools_include($plugin['name'], $plugin['module'], $dir);
-    module_invoke($plugin['module'] .'_'. $callback, 'form_alter', $form, $form_state, $form_id);
+    if (function_exists($plugin['module'] .'_'. $callback .'_form_alter')) {
+     	$function = $plugin['module'] .'_'. $callback .'_form_alter';
+     	$function($form, $form_state, $form_id);
+   	} 
   }
 }
 
