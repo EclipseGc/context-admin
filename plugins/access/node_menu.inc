@@ -83,14 +83,11 @@ function context_access_node_menu_access_check($conf, $context) {
  * context.
  */
 function context_access_node_menu_access_restrictions($conf, &$context) {
-  dsm('access restrictions');
-  dsm($conf);
-  dsm($context);
   if (isset($context->restrictions['menu'])) {
     $context->restrictions['menu'] = array_unique(array_merge($context->restrictions['menu'], array_keys(array_filter($conf['menu']))));
   }
   else {
-    $context->restrictions['menu'] = array_keys(array_filter($conf['menu']));
+    $context->restrictions['menu'] = $conf['menu'];
   }
 }
 
