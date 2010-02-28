@@ -41,7 +41,7 @@ function context_access_node_menu_access_settings(&$form, &$form_state, $conf) {
 
   $form['settings']['menu'] = array(
     '#title' => t('Menu'),
-    '#type' => 'radios',
+    '#type' => 'select',
     '#options' => $options,
     '#description' => t('Only the checked menus will be valid.'),
     '#default_value' => $conf['menu'],
