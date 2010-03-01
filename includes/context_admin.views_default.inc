@@ -5,6 +5,11 @@
  */
 function context_admin_views_default_views() {
   $tasks = page_manager_get_tasks();
+  ctools_include('export');
+  $tasks2 = page_manager_page_manager_pages_list();
+  foreach ($tasks2 as $task_id => $task) {
+    $tasks['page-'. $task_id] = $task;
+  }
   foreach ($tasks as $task_id => $task) {
     $cache = page_manager_cache_load($task_id);
     page_manager_clear_page_cache($task_id);
