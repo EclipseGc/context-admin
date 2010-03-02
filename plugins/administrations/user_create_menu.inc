@@ -15,11 +15,13 @@ $plugin = array(
 function context_admin_user_create_menu_content_form(&$form, &$form_state, $cache = NULL) {
   if (!is_null($form_state['handler_id'])) {
     $default = $form_state['page']->handlers[$form_state['handler_id']]->conf['context_admin_user_roles'] ? $form_state['page']->handlers[$form_state['handler_id']]->conf['context_admin_user_roles'] : $cache->handlers[$form_state['handler_id']]->conf['context_admin_user_roles'];
+    $default_alter = $form_state['page']->handlers[$form_state['handler_id']]->conf['context_admin_user_roles_alter'] ? $form_state['page']->handlers[$form_state['handler_id']]->conf['context_admin_user_roles_alter'] : $cache->handlers[$form_state['handler_id']]->conf['context_admin_user_roles_alter'];
     $default_help = $form_state['page']->handlers[$form_state['handler_id']]->conf['context_admin_user_registration_help'] ? $form_state['page']->handlers[$form_state['handler_id']]->conf['context_admin_user_registration_help'] : $cache->handlers[$form_state['handler_id']]->conf['context_admin_user_registration_help'];
     $default_notify = $form_state['page']->handlers[$form_state['handler_id']]->conf['context_admin_user_notify'] ? $form_state['page']->handlers[$form_state['handler_id']]->conf['context_admin_user_notify'] : $cache->handlers[$form_state['handler_id']]->conf['context_admin_user_notify'];
   }
   else {
     $default = $form_state['page']->new_handler->conf['context_admin_user_roles'];
+    $default_alter = $form_state['page']->new_handler->conf['context_admin_user_roles_alter'];
     $default_help = $form_state['page']->new_handler->conf['context_admin_user_registration_help'];
     $default_notify = $form_state['page']->new_handler->conf['context_admin_user_notify'];
   }
@@ -32,7 +34,13 @@ function context_admin_user_create_menu_content_form(&$form, &$form_state, $cach
     '#type' => 'checkboxes',
     '#title' => t('Select the a default role for users created from this administration, if necessary.'),
     '#options' => $options,
-    '#default_value' => $default,
+    '#default_value' => is_array($default) ? $default : array($default),
+  );
+  $form['context_admin_user_roles_alter'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Alter Roles'),
+    '#description' => t('Allow users of this form to set any role.'),
+    '#default_value' => $default_alter,
   );
   /*$form['context_admin_user_registration_help'] = array(
     '#type' => 'checkbox',
@@ -53,11 +61,13 @@ function context_admin_user_create_menu_content_form_submit(&$form, &$form_state
   $cache = context_admin_get_page_cache($form_state['page']->subtask_id);
   if (!is_null($form_state['handler_id'])) {
     $form_state['page']->handlers[$form_state['handler_id']]->conf['context_admin_user_roles'] = $form_state['values']['context_admin_user_roles'];
+    $form_state['page']->handlers[$form_state['handler_id']]->conf['context_admin_user_roles_alter'] = $form_state['values']['context_admin_user_roles_alter'];
     //$form_state['page']->handlers[$form_state['handler_id']]->conf['context_admin_user_registration_help'] = $form_state['values']['context_admin_user_registration_help'];
     $form_state['page']->handlers[$form_state['handler_id']]->conf['context_admin_user_notify'] = $form_state['values']['context_admin_user_notify'];
   }
   else {
     $form_state['page']->new_handler->conf['context_admin_options_items'] = $form_state['values']['context_admin_options_items'];
+    $form_state['page']->new_handler->conf['context_admin_options_items_alter'] = $form_state['values']['context_admin_options_items_alter'];
     //$form_state['page']->new_handler->conf['context_admin_user_registration_help'] = $form_state['values']['context_admin_user_registration_help'];
     $form_state['page']->new_handler->conf['context_admin_user_notify'] = $form_state['values']['context_admin_user_notify'];
   }
@@ -70,8 +80,6 @@ function context_admin_user_create_menu_render_page($handler, $base_contexts, $a
 }
 
 function context_admin_user_create_menu_render_form($form_state, $handler, $base_contexts, $args, $test = TRUE) {
-  global $user;
-
   $form = array();
 
   // Display the registration form.
@@ -90,10 +98,10 @@ function context_admin_user_create_menu_render_form($form_state, $handler, $base
      '#type' => 'checkbox',
      '#title' => t('Notify user of new account')
     );
-    // Redirect back to page which initiated the create request;
-    // usually admin/user/user/create.
-    $form['destination'] = array('#type' => 'hidden', '#value' => $_GET['q']);
   }
+  // Redirect back to page which initiated the create request;
+  $form['destination'] = array('#type' => 'hidden', '#value' => $_GET['q']);
+
 
   // Create a dummy variable for pass-by-reference parameters.
   $null = NULL;
@@ -136,4 +144,15 @@ if (Drupal.jsEnabled) {
   $form['#submit'][] = 'user_register_submit';
 
   return $form;
+}
+
+function context_admin_user_create_menu_form_alter(&$form, $form_state, $form_id) {
+  $page = page_manager_get_current_page();
+  if ($form_id == 'context_admin_user_create_menu_render_form' && $page) {
+    $form['roles']['#value'] = $page['handler']->conf['context_admin_user_roles'];
+    $form['roles']['#value'][2] = TRUE;
+    if (!$page['handler']->conf['context_admin_user_roles_alter']) {
+      $form['roles']['#disabled'] = TRUE;
+    }
+  }
 }
