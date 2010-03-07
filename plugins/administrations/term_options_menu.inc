@@ -82,7 +82,7 @@ function context_admin_term_options_menu_admin_term_edit($tid, $add = NULL) {
 }
 
 function context_admin_term_options_menu_taxonomy_form_term(&$form_state, $vocabulary, $edit = array(), $add = NULL) {
-  $form = taxonomy_form_term(&$form_state, $vocabulary, $edit);
+  $form = taxonomy_form_term($form_state, $vocabulary, $edit);
   if ($add) {
     $form['#add'] = TRUE;
   }
@@ -90,7 +90,7 @@ function context_admin_term_options_menu_taxonomy_form_term(&$form_state, $vocab
 }
 
 function context_admin_term_options_menu_taxonomy_form_term_submit($form, &$form_state) {
-  taxonomy_form_term_submit($form, &$form_state);
+  taxonomy_form_term_submit($form, $form_state);
   $form_state['redirect'] = $_GET['q'];
 }
 

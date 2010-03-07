@@ -1,5 +1,9 @@
 
 Context admin provides ....
+STATEMENT OF PURPOSE
+====================
+
+Contextual Administration is intended to be a simple tool for deploying custom administrations on your site, or as an exportable within your module.  In short anything you can put on a page, context_admin is a simple solution to doing so without the overhead of panels.
 
 INSTALLATION
 ============
