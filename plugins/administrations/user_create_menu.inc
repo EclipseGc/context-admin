@@ -36,7 +36,8 @@ function context_admin_user_create_menu_content_form(&$form, &$form_state, $cach
   }
   $form['context_admin_user_roles'] = array(
     '#type' => 'checkboxes',
-    '#title' => t('Select the a default role for users created from this administration, if necessary.'),
+    '#title' => t('Default Roles'),
+    '#description' => t('Select the a default role for users created from this administration, if necessary.'),
     '#options' => $options,
     '#default_value' => is_array($default) ? $default : array($default),
   );
@@ -83,12 +84,16 @@ function context_admin_user_create_menu_content_form_submit(&$form, &$form_state
   if (!is_null($form_state['handler_id'])) {
     $form_state['page']->handlers[$form_state['handler_id']]->conf['context_admin_user_roles'] = $form_state['values']['context_admin_user_roles'];
     $form_state['page']->handlers[$form_state['handler_id']]->conf['context_admin_user_roles_alter'] = $form_state['values']['context_admin_user_roles_alter'];
+    $form_state['page']->handlers[$form_state['handler_id']]->conf['context_admin_user_status'] = $form_state['values']['context_admin_user_status'];
+    $form_state['page']->handlers[$form_state['handler_id']]->conf['context_admin_user_status_alter'] = $form_state['values']['context_admin_user_status_alter'];
     //$form_state['page']->handlers[$form_state['handler_id']]->conf['context_admin_user_registration_help'] = $form_state['values']['context_admin_user_registration_help'];
     $form_state['page']->handlers[$form_state['handler_id']]->conf['context_admin_user_notify'] = $form_state['values']['context_admin_user_notify'];
   }
   else {
     $form_state['page']->new_handler->conf['context_admin_options_items'] = $form_state['values']['context_admin_options_items'];
     $form_state['page']->new_handler->conf['context_admin_options_items_alter'] = $form_state['values']['context_admin_options_items_alter'];
+    $form_state['page']->new_handler->conf['context_admin_user_status'] = $form_state['values']['context_admin_user_status'];
+    $form_state['page']->new_handler->conf['context_admin_user_status_alter'] = $form_state['values']['context_admin_user_status_alter'];
     //$form_state['page']->new_handler->conf['context_admin_user_registration_help'] = $form_state['values']['context_admin_user_registration_help'];
     $form_state['page']->new_handler->conf['context_admin_user_notify'] = $form_state['values']['context_admin_user_notify'];
   }
@@ -113,7 +118,7 @@ function context_admin_user_create_menu_render_form($form_state, $handler, $base
   }
 
   // Merge in the default user edit fields.
-  $form = array_merge($form, user_edit_form($form_state, NULL, NULL, TRUE));
+  $form = array_merge($form, context_admin_user_edit_form($form_state, $handler, $base_contexts, $args, $test));
   if ($handler->conf['context_admin_user_notify']) {
     $form['account']['notify'] = array(
      '#type' => 'checkbox',
@@ -161,6 +166,10 @@ if (Drupal.jsEnabled) {
   }
 
   $form['submit'] = array('#type' => 'submit', '#value' => t('Create new account'), '#weight' => 30);
+  foreach (module_implements('form_alter') as $module) {
+    $function = $module .'_form_alter';
+    $function($form, $form_state, 'user_register');
+  }
   $form['#validate'][] = 'user_register_validate';
   $form['#submit'][] = 'context_admin_user_create_menu_render_form_submit';
 
@@ -170,7 +179,6 @@ if (Drupal.jsEnabled) {
 function context_admin_user_create_menu_render_form_submit($form, &$form_state) {
   global $base_url;
   $page = page_manager_get_current_page();
-  $admin = user_access('administer users');
 
   $mail = $form_state['values']['mail'];
   $name = $form_state['values']['name'];
@@ -199,9 +207,9 @@ function context_admin_user_create_menu_render_form_submit($form, &$form_state) 
   unset($form_state['values']['form_token'], $form_state['values']['submit'], $form_state['values']['op'], $form_state['values']['notify'], $form_state['values']['form_id'], $form_state['values']['affiliates'], $form_state['values']['destination']);
 
   $merge_data = array('pass' => $pass, 'init' => $mail, 'roles' => $roles);
-  if (!$admin) {
+  if (!$page['handler']->conf['context_admin_user_status_alter']) {
     // Set the user's status because it was not displayed in the form.
-    $merge_data['status'] = variable_get('user_register', 1) == 1;
+    $merge_data['status'] = $page['handler']->conf['context_admin_user_status'] == 1;
   }
   $account = user_save('', array_merge($form_state['values'], $merge_data));
   // Terminate if an error occured during user_save().
@@ -241,11 +249,77 @@ function context_admin_user_create_menu_render_form_submit($form, &$form_state) 
   }
 }
 
+function context_admin_user_edit_form($form_state, $handler, $base_contexts, $args, $test = TRUE) {
+  _user_password_dynamic_validation();
+  $admin = user_access('administer users');
+
+  // Account information:
+  $form['account'] = array('#type' => 'fieldset',
+    '#title' => t('Account information'),
+    '#weight' => -10,
+  );
+  // Only show name field when: registration page; or user is editing own account and can change username; or an admin user.
+  $form['account']['name'] = array('#type' => 'textfield',
+    '#title' => t('Username'),
+    '#default_value' => $edit['name'],
+    '#maxlength' => USERNAME_MAX_LENGTH,
+    '#description' => t('Spaces are allowed; punctuation is not allowed except for periods, hyphens, and underscores.'),
+    '#required' => TRUE,
+  );
+  $form['account']['mail'] = array('#type' => 'textfield',
+    '#title' => t('E-mail address'),
+    '#default_value' => $edit['mail'],
+    '#maxlength' => EMAIL_MAX_LENGTH,
+    '#description' => t('A valid e-mail address. All e-mails from the system will be sent to this address. The e-mail address is not made public and will only be used if you wish to receive a new password or wish to receive certain news or notifications by e-mail.'),
+    '#required' => TRUE,
+  );
+  $form['account']['pass'] = array(
+    '#type' => 'password_confirm',
+    '#description' => t('Provide a password for the new account in both fields.'),
+    '#required' => TRUE,
+    '#size' => 25,
+  );
+  if ($handler->conf['context_admin_user_status_alter']) {
+    $form['account']['status'] = array(
+      '#type' => 'radios',
+      '#title' => t('Status'),
+      '#default_value' => isset($edit['status']) ? $edit['status'] : 1,
+      '#options' => array(t('Blocked'), t('Active'))
+    );
+  }
+  $roles = user_roles(TRUE);
+
+  // The disabled checkbox subelement for the 'authenticated user' role
+  // must be generated separately and added to the checkboxes element,
+  // because of a limitation in D6 FormAPI not supporting a single disabled
+  // checkbox within a set of checkboxes.
+  // TODO: This should be solved more elegantly. See issue #119038.
+  $checkbox_authenticated = array(
+    '#type' => 'checkbox',
+    '#title' => $roles[DRUPAL_AUTHENTICATED_RID],
+    '#default_value' => TRUE,
+    '#disabled' => TRUE,
+  );
+
+  unset($roles[DRUPAL_AUTHENTICATED_RID]);
+  if ($roles) {
+    $default = empty($edit['roles']) ? array() : array_keys($edit['roles']);
+    $form['account']['roles'] = array(
+      '#type' => 'checkboxes',
+      '#title' => t('Roles'),
+      '#default_value' => $default,
+      '#options' => $roles,
+      DRUPAL_AUTHENTICATED_RID => $checkbox_authenticated,
+    );
+  }
+  $form['#uid'] = $uid;
+
+  return $form;
+}
 
 function context_admin_user_create_menu_form_alter(&$form, $form_state, $form_id) {
   $page = page_manager_get_current_page();
   if ($form_id == 'context_admin_user_create_menu_render_form' && $page) {
-    //drupal_set_message('<pre>'. var_export($form['status'], TRUE) .'</pre>');
     $form['roles']['#value'] = $page['handler']->conf['context_admin_user_roles'];
     $form['roles']['#value'][2] = TRUE;
     if (!$page['handler']->conf['context_admin_user_roles_alter']) {

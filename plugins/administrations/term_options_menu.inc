@@ -83,6 +83,10 @@ function context_admin_term_options_menu_admin_term_edit($tid, $add = NULL) {
 
 function context_admin_term_options_menu_taxonomy_form_term(&$form_state, $vocabulary, $edit = array(), $add = NULL) {
   $form = taxonomy_form_term($form_state, $vocabulary, $edit);
+  foreach (module_implements('form_alter') as $module) {
+    $function = $module .'_form_alter';
+    $function($form, $form_state, 'taxonomy_form_term');
+  }
   if ($add) {
     $form['#add'] = TRUE;
   }
