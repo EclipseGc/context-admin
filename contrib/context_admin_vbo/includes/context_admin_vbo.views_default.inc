@@ -3,7 +3,7 @@
 /**
  * Implementation of hook_views_default_views().
  */
-function context_admin_views_default_views() {
+function context_admin_vbo_views_default_views() {
   $tasks = page_manager_get_tasks();
   ctools_include('export');
   $tasks2 = page_manager_page_manager_pages_list();
@@ -16,15 +16,15 @@ function context_admin_views_default_views() {
     foreach ($cache->handlers as $handler) {
       if ($handler->conf['context_admin_options'] == 'views_bulk_menu') {
         $view_name = $handler->name;
-        $type = $handler->conf['context_admin_views_bulk_node_type'];
-        $pub = $handler->conf['context_admin_views_bulk_published'];
+        $type = $handler->conf['context_admin_vbo_views_bulk_node_type'];
+        $pub = $handler->conf['context_admin_vbo_views_bulk_published'];
         if ($pub == 'published') {
           $pub = TRUE;
         }
         elseif ($pub == 'unpublished') {
           $pub = FALSE;
         }
-        $view = context_admin_default_view($view_name, $type, $pub);
+        $view = context_admin_vbo_default_view($view_name, $type, $pub);
         $views[$view->name] = $view;
       }
     }
@@ -32,7 +32,7 @@ function context_admin_views_default_views() {
   return $views;
 }
 
-function context_admin_default_view($view_name, $type, $pub) {
+function context_admin_vbo_default_view($view_name, $type, $pub) {
   $view = new view;
   $view->name = $view_name;
   $view->description = '';

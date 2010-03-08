@@ -271,7 +271,7 @@ function context_admin_menu_context_edit_content(&$form, &$form_state) {
   $contexts = array();
   $options = array();
   foreach ($arguments as $key => $argument) {
-    $contexts[$key] = context_admin_get_plugins('administrations', array('context' => $key));
+    $contexts[$key] = context_admin_get_plugins('context_admin', array('context' => $key));
     foreach($contexts[$key] as $callback => $admin) {
       $options[$callback] = $admin['title'];
     }
@@ -304,8 +304,8 @@ function context_admin_menu_context_edit_content_settings(&$form, &$form_state) 
   else {
     $callback = $form_state['page']->new_handler->conf['context_admin_options'];
   }
-  $plugin = context_admin_get_plugins('administrations', array('id' => $callback));
-  $dir = module_invoke($plugin['module'], 'ctools_plugin_directory', 'context_admin', 'administrations');
+  $plugin = context_admin_get_plugins('context_admin', array('id' => $callback));
+  $dir = module_invoke($plugin['module'], 'ctools_plugin_directory', 'context_admin', 'context_admin');
   ctools_include($plugin['name'], $plugin['module'], $dir);
   $form += module_invoke($plugin['module'] .'_'. $callback, 'content_form', $form, $form_state, $cache);
 }
@@ -324,7 +324,7 @@ function context_admin_menu_context_edit_content_settings_submit(&$form, &$form_
   else {
     $callback = $form_state['page']->new_handler->conf['context_admin_options'];
   }
-  $plugin = context_admin_get_plugins('administrations', array('id' => $callback));
+  $plugin = context_admin_get_plugins('context_admin', array('id' => $callback));
   if (function_exists($plugin['module'] .'_'. $callback .'_content_form_submit')) {
     $form_state += module_invoke($plugin['module'] .'_'. $callback, 'content_form_submit', $form, $form_state);
   }
@@ -333,8 +333,8 @@ function context_admin_menu_context_edit_content_settings_submit(&$form, &$form_
 function context_admin_menu_context_save(&$handler, $update) {
   $callback = $handler->conf['context_admin_options'];
   if ($callback) {
-    $plugin = context_admin_get_plugins('administrations', array('id' => $callback));
-    $dir = module_invoke($plugin['module'], 'ctools_plugin_directory', 'context_admin', 'administrations');
+    $plugin = context_admin_get_plugins('context_admin', array('id' => $callback));
+    $dir = module_invoke($plugin['module'], 'ctools_plugin_directory', 'context_admin', 'context_admin');
     ctools_include($plugin['name'], $plugin['module'], $dir);
     module_invoke($plugin['module'] .'_'. $callback, 'save', $handler, $update);
   }
@@ -343,8 +343,8 @@ function context_admin_menu_context_save(&$handler, $update) {
 
 function context_admin_menu_context_delete(&$handler) {
   $callback = $handler->conf['context_admin_options'];
-  $plugin = context_admin_get_plugins('administrations', array('id' => $callback));
-  $dir = module_invoke($plugin['module'], 'ctools_plugin_directory', 'context_admin', 'administrations');
+  $plugin = context_admin_get_plugins('context_admin', array('id' => $callback));
+  $dir = module_invoke($plugin['module'], 'ctools_plugin_directory', 'context_admin', 'context_admin');
   ctools_include($plugin['name'], $plugin['module'], $dir);
   module_invoke($plugin['module'] .'_'. $callback, 'delete', $handler, $update);
   context_admin_clear_page_cache('context_admin', $handler->subtask);
@@ -353,8 +353,8 @@ function context_admin_menu_context_delete(&$handler) {
 function context_admin_menu_context_clone(&$handler) {
   $callback = $handler->conf['context_admin_options'];
   if ($callback) {
-    $plugin = context_admin_get_plugins('administrations', array('id' => $callback));
-    $dir = module_invoke($plugin['module'], 'ctools_plugin_directory', 'context_admin', 'administrations');
+    $plugin = context_admin_get_plugins('context_admin', array('id' => $callback));
+    $dir = module_invoke($plugin['module'], 'ctools_plugin_directory', 'context_admin', 'context_admin');
     ctools_include($plugin['name'], $plugin['module'], $dir);
     module_invoke($plugin['module'] .'_'. $callback, 'clone', $handler);
   }
@@ -363,8 +363,8 @@ function context_admin_menu_context_clone(&$handler) {
 function context_admin_menu_context_export(&$handler, $indent) {
   $callback = $handler->conf['context_admin_options'];
   if ($callback) {
-    $plugin = context_admin_get_plugins('administrations', array('id' => $callback));
-    $dir = module_invoke($plugin['module'], 'ctools_plugin_directory', 'context_admin', 'administrations');
+    $plugin = context_admin_get_plugins('context_admin', array('id' => $callback));
+    $dir = module_invoke($plugin['module'], 'ctools_plugin_directory', 'context_admin', 'context_admin');
     ctools_include($plugin['name'], $plugin['module'], $dir);
     module_invoke($plugin['module'] .'_'. $callback, 'export', $handler, $indent);
   }
@@ -395,8 +395,8 @@ function context_admin_menu_context_render($handler, $base_contexts, $args, $tes
     'handler' => $handler,
   ));
   $callback = $handler->conf['context_admin_options'];
-  $plugin = context_admin_get_plugins('administrations', array('id' => $callback));
-  $dir = module_invoke($plugin['module'], 'ctools_plugin_directory', 'context_admin', 'administrations');
+  $plugin = context_admin_get_plugins('context_admin', array('id' => $callback));
+  $dir = module_invoke($plugin['module'], 'ctools_plugin_directory', 'context_admin', 'context_admin');
   ctools_include($plugin['name'], $plugin['module'], $dir);
   $info['content'] = module_invoke($plugin['module'] .'_'. $callback, 'render_page', $handler, $base_contexts, $args, $test);
   return $info;

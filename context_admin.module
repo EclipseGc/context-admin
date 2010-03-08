@@ -94,13 +94,13 @@ function context_admin_form_alter(&$form, $form_state, $form_id) {
   $page = page_manager_get_current_page();
   if ($page) {
     $callback = $page['handler']->conf['context_admin_options'];
-    $plugin = context_admin_get_plugins('administrations', array('id' => $callback));
-    $dir = module_invoke($plugin['module'], 'ctools_plugin_directory', 'context_admin', 'administrations');
+    $plugin = context_admin_get_plugins('context_admin', array('id' => $callback));
+    $dir = module_invoke($plugin['module'], 'ctools_plugin_directory', 'context_admin', 'context_admin');
     ctools_include($plugin['name'], $plugin['module'], $dir);
     if (function_exists($plugin['module'] .'_'. $callback .'_form_alter')) {
-     	$function = $plugin['module'] .'_'. $callback .'_form_alter';
-     	$function($form, $form_state, $form_id);
-   	} 
+      $function = $plugin['module'] .'_'. $callback .'_form_alter';
+      $function($form, $form_state, $form_id);
+    }
   }
 }
 
@@ -108,15 +108,15 @@ function context_admin_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
   $page = page_manager_get_current_page();
   if ($page && ($op != 'load')) {
     $callback = $page['handler']->conf['context_admin_options'];
-    $plugin = context_admin_get_plugins('administrations', array('id' => $callback));
-    $dir = module_invoke($plugin['module'], 'ctools_plugin_directory', 'context_admin', 'administrations');
+    $plugin = context_admin_get_plugins('context_admin', array('id' => $callback));
+    $dir = module_invoke($plugin['module'], 'ctools_plugin_directory', 'context_admin', 'context_admin');
     ctools_include($plugin['name'], $plugin['module'], $dir);
     module_invoke($plugin['module'] .'_'. $callback, 'nodeapi', $node, $op, $a3, $a4);
   }
   elseif ($page && $op == 'load') {
     $callback = $page['handler']->conf['context_admin_options'];
-    $plugin = context_admin_get_plugins('administrations', array('id' => $callback));
-    $dir = module_invoke($plugin['module'], 'ctools_plugin_directory', 'context_admin', 'administrations');
+    $plugin = context_admin_get_plugins('context_admin', array('id' => $callback));
+    $dir = module_invoke($plugin['module'], 'ctools_plugin_directory', 'context_admin', 'context_admin');
     ctools_include($plugin['name'], $plugin['module'], $dir);
     return module_invoke($plugin['module'] .'_'. $callback, 'nodeapi', $node, $op, $a3, $a4);
   }
