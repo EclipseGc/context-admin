@@ -12,19 +12,19 @@
 $plugin = array(
   'title' => t("Term: Parent"),
   'description' => t('Control access based upon the parent of the current term.'),
-  'callback' => 'context_access_term_parent_access_check',
+  'callback' => 'context_admin_term_parent_access_check',
   'default' => array('menu' => array()),
-  'settings form' => 'context_access_term_parent_access_settings',
-  'settings form submit' => 'context_access_term_parent_access_settings_submit',
-  'summary' => 'context_access_term_parent_access_summary',
+  'settings form' => 'context_admin_term_parent_access_settings',
+  'settings form submit' => 'context_admin_term_parent_access_settings_submit',
+  'summary' => 'context_admin_term_parent_access_summary',
   'required context' => new ctools_context_required(t('Term'), array('term', 'terms')),
-  'restrictions' => 'context_access_term_parent_access_restrictions',
+  'restrictions' => 'context_admin_term_parent_access_restrictions',
 );
 
 /**
  * Settings form for the 'by node_type' access plugin
  */
-function context_access_term_parent_access_settings(&$form, &$form_state, $conf) {
+function context_admin_term_parent_access_settings(&$form, &$form_state, $conf) {
   $form['settings']['parent'] = array(
     '#title' => t('Term parent'),
     '#type' => 'textfield',
@@ -36,14 +36,14 @@ function context_access_term_parent_access_settings(&$form, &$form_state, $conf)
 /**
  * Compress the node_types allowed to the minimum.
  */
-function context_access_term_parent_access_settings_submit(&$form, &$form_state) {
+function context_admin_term_parent_access_settings_submit(&$form, &$form_state) {
 
 }
 
 /**
  * Check for access.
  */
-function context_access_term_parent_access_check($conf, $context) {
+function context_admin_term_parent_access_check($conf, $context) {
   // Per the example in node type in core ctools
   if (empty($context) || empty($context->data) || empty($context->data->tid)) {
     return FALSE;
@@ -68,7 +68,7 @@ function context_access_term_parent_access_check($conf, $context) {
  * Inform the UI that we've eliminated a bunch of possibilities for this
  * context.
  */
-function context_access_term_parent_access_restrictions($conf, &$context) {
+function context_admin_term_parent_access_restrictions($conf, &$context) {
   if (!is_array($conf['parent'])) {
     $conf['parent'] = array($conf['parent']);
   }
@@ -83,7 +83,7 @@ function context_access_term_parent_access_restrictions($conf, &$context) {
 /**
  * Provide a summary description based upon the checked node_types.
  */
-function context_access_term_parent_access_summary($conf, $context) {
+function context_admin_term_parent_access_summary($conf, $context) {
   if (!isset($conf['parent'])) {
     return t('No parent context has been selected for @identifier', array('@identifier' => $context->identifier));
   }
