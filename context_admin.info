@@ -1,3 +1,4 @@
+;$Id$
 name = Contextual Administration
 description = A module for building and exporting menu items for a given contextual area of a site.
 core = 6.x

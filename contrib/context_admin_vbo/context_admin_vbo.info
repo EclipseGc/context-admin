@@ -1,3 +1,4 @@
+;$Id$
 name = Contextual Administration Views Bulk Operations
 description = Contextual Adminsitration plugins for use with Views Bulk Operations.
 core = 6.x

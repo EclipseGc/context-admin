@@ -1,4 +1,5 @@
 <?php
+//$Id$
 
 /**
  * Plugins are described by creating a $plugin array which will be used
@@ -30,20 +31,22 @@ function context_admin_node_create_menu_content_form(&$form, &$form_state, $cach
     '#options' => $options,
     '#default_value' => $default,
   );
-  foreach($form_state['page']->subtask['subtask']->arguments as $context => $args) {
-    if ($context == 'node') {
-      if (!is_null($form_state['handler_id'])) {
-        $sub = $form_state['page']->handlers[$form_state['handler_id']]->conf['context_admin_sub_page'] ? $form_state['page']->handlers[$form_state['handler_id']]->conf['context_admin_sub_page'] : $cache->handlers[$form_state['handler_id']]->conf['context_admin_sub_page'];
+  if ($form_state['page']->subtask['subtask']->arguments) {
+    foreach($form_state['page']->subtask['subtask']->arguments as $context => $args) {
+      if ($context == 'node') {
+        if (!is_null($form_state['handler_id'])) {
+          $sub = $form_state['page']->handlers[$form_state['handler_id']]->conf['context_admin_sub_page'] ? $form_state['page']->handlers[$form_state['handler_id']]->conf['context_admin_sub_page'] : $cache->handlers[$form_state['handler_id']]->conf['context_admin_sub_page'];
+        }
+        else {
+          $sub = $form_state['page']->new_handler->conf['context_admin_sub_page'];
+        }
+        $form['context_admin_sub_page'] = array(
+          '#type' => 'checkbox',
+          '#title' => t('Create as sub node'),
+          '#description' => t('Creates a node as a sub node of the currently viewed node within the menu system.'),
+          '#default_value' => $sub,
+        );
       }
-      else {
-        $sub = $form_state['page']->new_handler->conf['context_admin_sub_page'];
-      }
-      $form['context_admin_sub_page'] = array(
-        '#type' => 'checkbox',
-        '#title' => t('Create as sub node'),
-        '#description' => t('Creates a node as a sub node of the currently viewed node within the menu system.'),
-        '#default_value' => $sub,
-      );
     }
   }
   return $form;
