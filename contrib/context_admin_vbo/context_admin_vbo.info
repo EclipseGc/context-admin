@@ -3,5 +3,5 @@ name = Contextual Administration Views Bulk Operations
 description = Contextual Adminsitration plugins for use with Views Bulk Operations.
 core = 6.x
 package = Contextual Administration
-version = "6.x-1.0 beta1"
 dependencies[] = context_admin
+dependencies[] = views_bulk_operations
