@@ -4,3 +4,4 @@ core = 6.x
 package = Contextual Administration
 version = "6.x-1.0 beta1"
 dependencies[] = context_admin
+dependencies[] = views_bulk_operations
