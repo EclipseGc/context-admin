@@ -343,10 +343,12 @@ function context_admin_menu_context_save(&$handler, $update) {
 
 function context_admin_menu_context_delete(&$handler) {
   $callback = $handler->conf['context_admin_options'];
-  $plugin = context_admin_get_plugins('context_admin', array('id' => $callback));
-  $dir = module_invoke($plugin['module'], 'ctools_plugin_directory', 'context_admin', 'context_admin');
-  ctools_include($plugin['name'], $plugin['module'], $dir);
-  module_invoke($plugin['module'] .'_'. $callback, 'delete', $handler, $update);
+  if ($callback) {
+    $plugin = context_admin_get_plugins('context_admin', array('id' => $callback));
+    $dir = module_invoke($plugin['module'], 'ctools_plugin_directory', 'context_admin', 'context_admin');
+    ctools_include($plugin['name'], $plugin['module'], $dir);
+    module_invoke($plugin['module'] .'_'. $callback, 'delete', $handler, $update);
+  }
   context_admin_clear_page_cache('context_admin', $handler->subtask);
 }
 
@@ -395,9 +397,14 @@ function context_admin_menu_context_render($handler, $base_contexts, $args, $tes
     'handler' => $handler,
   ));
   $callback = $handler->conf['context_admin_options'];
-  $plugin = context_admin_get_plugins('context_admin', array('id' => $callback));
-  $dir = module_invoke($plugin['module'], 'ctools_plugin_directory', 'context_admin', 'context_admin');
-  ctools_include($plugin['name'], $plugin['module'], $dir);
-  $info['content'] = module_invoke($plugin['module'] .'_'. $callback, 'render_page', $handler, $base_contexts, $args, $test);
+  if ($callback) {
+    $plugin = context_admin_get_plugins('context_admin', array('id' => $callback));
+    $dir = module_invoke($plugin['module'], 'ctools_plugin_directory', 'context_admin', 'context_admin');
+    ctools_include($plugin['name'], $plugin['module'], $dir);
+    $info['content'] = module_invoke($plugin['module'] .'_'. $callback, 'render_page', $handler, $base_contexts, $args, $test);
+  }
+  else {
+    $info['content'] = t('An error occurred with your context admin handler.  No callback was defined.');
+  }
   return $info;
 }
