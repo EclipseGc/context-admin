@@ -9,7 +9,6 @@
 $plugin = array(
   'title' => t('Create User'),
   'description' => t('Allows the creation of a user.  This circumvents the typical drupal access controls on user creation.'),
-  'context' => 'global',
 );
 
 

@@ -9,7 +9,7 @@
 $plugin = array(
   'title' => t('Create Node with auto node reference'),
   'description' => t('Creates a node with an automatic reference back to its parent.'),
-  'context' => 'node',
+  'required context' => new ctools_context_required(t('Node'), 'node'),
 );
 
 
@@ -116,17 +116,9 @@ function context_admin_noderef_create_node_form_alter(&$form, $form_state, $form
   switch($form_id) {
     case $page['handler']->conf['context_admin_options_items'] .'_node_form':
       if ($form['#node']->type == $page['handler']->conf['context_admin_options_items']) {
-        foreach ($page['contexts'] as $context) {
-          if ($context->type == 'node') {
-            $ref_nid = $context->data->nid;
-            // probably need some UI selection of context once we're supporting that portion of ctools more completely.
-            break;
-          }
-        }
-        if (is_numeric($ref_nid)) {
-          $form[$page['handler']->conf['context_admin_field']][0]['#default_value']['nid'] = $ref_nid;
-          $form[$page['handler']->conf['context_admin_field']][0]['#access'] = FALSE;
-        }
+        $context = $page['contexts'][$page['handler']->conf['submitted_context']];
+        $form[$page['handler']->conf['context_admin_field']][0]['#default_value']['nid'] = $context->data->nid;
+        $form[$page['handler']->conf['context_admin_field']][0]['#access'] = FALSE;
       }
       break;
   }
@@ -136,8 +128,9 @@ function context_admin_noderef_create_node_nodeapi(&$node, $op, $a3 = NULL, $a4 
   switch ($op) {
     case 'insert':
       $page = page_manager_get_current_page();
+      $context = $page['contexts'][$page['handler']->conf['submitted_context']];
       if ($node->type == $page['handler']->conf['context_admin_options_items'] && $page['handler']->conf['context_admin_autoforward']) {
-        drupal_goto('node/'. $node->{$page['handler']->conf['context_admin_field']}[0]['nid']);
+        drupal_goto('node/'. $context->data->nid);
       }
       break;
   }

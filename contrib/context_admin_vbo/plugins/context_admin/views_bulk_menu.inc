@@ -9,8 +9,6 @@
 $plugin = array(
   'title' => t('Views Administration'),
   'description' => t('Provides a generic Views Bulk Operations based view that should work for most node type needs.'),
-  'context' => 'global',
-  'restriction arguments' => array('views_bulk_operations'),
 );
 
 function context_admin_vbo_views_bulk_menu_content_form(&$form, &$form_state, $cache = NULL) {

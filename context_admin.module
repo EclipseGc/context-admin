@@ -58,35 +58,27 @@ function context_admin_clear_page_cache($name) {
 
 function context_admin_get_plugins($type, $options = array()) {
   $id = $options['id'] ? $options['id'] : NULL;
-  $context = $options['context'] ? $options['context'] : 'global';
+  ctools_include('plugins');
+  ctools_include('context');
   if (is_null($id)) {
-    ctools_include('plugins');
     $plugins = ctools_get_plugins('context_admin', $type);
-    foreach ($plugins as $key => $plugin) {
-      if (!is_array($plugin['context'])) {
-        $plugin['context'] = array($plugin['context']);
-      }
-      if (!in_array($context, $plugin['context'])) {
-        unset($plugins[$key]);
-      }
-      if ($plugin['restriction arguments'] && $plugin['restriction callback']) {
-        // Probably need some sort of loading mechanism in case the function is in an include somewhere.
-        $access = call_user_func_array($plugin['restriction callback'], $plugin['restriction arguments']);
-      }
-      elseif ($plugin['restriction arguments']) {
-        $access = module_exists($plugin['restriction arguments'][0]);
-      }
-      else {
-        $access = TRUE;
-      }
-      if (!$access) {
-        unset($plugins[$key]);
-      }
-    }
   }
   else {
     $plugins = ctools_get_plugins('context_admin', $type, $id);
   }
+  return $plugins;
+}
+
+function context_admin_get_contextual_plugins($contexts) {
+  $all_plugins = context_admin_get_plugins('context_admin');
+  $plugins = array();
+  foreach ($all_plugins as $id => $plugin) {
+    if (!empty($plugin['required context']) && !ctools_context_match_requirements($contexts, $plugin['required context'])) {
+      continue;
+    }
+    $plugins[$id] = $plugin;
+  }
+
   return $plugins;
 }
 

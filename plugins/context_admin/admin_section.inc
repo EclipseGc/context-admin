@@ -9,7 +9,6 @@
 $plugin = array(
   'title' => t('Administrative Section'),
   'description' => t('Administrative sections add additional holders to the /admin page automatically, allowing for easy creation of new administration sections.'),
-  'context' => 'global',
 );
 
 function context_admin_admin_section_content_form(&$form, &$form_state, $cache = NULL) {

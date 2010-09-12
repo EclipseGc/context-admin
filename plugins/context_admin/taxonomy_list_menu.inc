@@ -9,7 +9,6 @@
 $plugin = array(
   'title' => t('Vocabulary Options'),
   'description' => t('Provides a number of different vocabulary related functions to allow for contextualized vocabulary maintenance.'),
-  'context' => 'global',
 );
 
 function context_admin_taxonomy_list_menu_content_form(&$form, &$form_state, $cache = NULL) {

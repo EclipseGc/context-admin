@@ -9,7 +9,7 @@
 $plugin = array(
   'title' => t('Taxonomy Term Options'),
   'description' => t('Provides a number of different term related functions to allow for contextualized taxonomy term maintenance.'),
-  'context' => 'term',
+  'required context' => new ctools_context_required(t('Term'), 'term'),
 );
 
 function context_admin_term_options_menu_content_form(&$form, &$form_state, $cache = NULL) {
@@ -53,13 +53,13 @@ function context_admin_term_options_menu_render_page($handler, $base_contexts, $
   module_load_include('inc', 'taxonomy', 'taxonomy.admin');
   switch($handler->conf['context_admin_term_options']) {
     case 'add':
-      return context_admin_term_options_menu_admin_term_edit($args[0], TRUE);
+      return context_admin_term_options_menu_admin_term_edit($base_contexts[$handler->conf['submitted_context']]->data->tid, TRUE);
     case 'term':
-      return context_admin_term_options_menu_admin_term_edit($args[0]);
+      return context_admin_term_options_menu_admin_term_edit($base_contexts[$handler->conf['submitted_context']]->data->tid);
     case 'vocabulary':
-      $dir = module_invoke('context_admin', 'ctools_plugin_directory', 'context_admin', 'administrations');
+      $dir = module_invoke('context_admin', 'ctools_plugin_directory', 'context_admin', 'context_admin');
       ctools_include('taxonomy_list_menu', 'context_admin', $dir);
-      if ($term = (array)taxonomy_get_term($args[0])) {
+      if ($term = (array)taxonomy_get_term($base_contexts[$handler->conf['submitted_context']]->data->tid)) {
         $form = drupal_get_form('context_admin_taxonomy_list_menu_taxonomy_form_vocabulary', (array)taxonomy_vocabulary_load($term['vid']));
         return $form;
       }
@@ -101,8 +101,10 @@ function context_admin_term_options_menu_taxonomy_form_term_submit($form, &$form
 
 function context_admin_term_options_menu_form_alter(&$form, $form_state, $form_id) {
   if ($form_id == 'context_admin_term_options_menu_taxonomy_form_term') {
-    if ($form['#add'] && arg(2)) {
-      $form['advanced']['parent']['#default_value'] = array(arg(2));
+    $page = page_manager_get_current_page();
+    $context = $page['contexts'][$page['handler']->conf['submitted_context']];
+    if ($form['#add'] && $context->data->tid) {
+      $form['advanced']['parent']['#default_value'] = array($context->data->tid);
     }
   }
 }

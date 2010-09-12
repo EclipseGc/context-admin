@@ -9,11 +9,18 @@
 $plugin = array(
   'title' => t('Create Node'),
   'description' => t('Allows the creation of a particular node type.  This circumvents the typical drupal access controls on node creation.'),
-  'context' => 'global',
+  'required context' => new ctools_context_optional(t('Node'), 'node'),
 );
 
 
 function context_admin_node_create_menu_content_form(&$form, &$form_state, $cache = NULL) {
+  ctools_include('dependent');
+  $context_options = $form['context']['#options'];
+  unset($context_options['empty']);
+  $context_dependencies = array();
+  foreach ($context_options as $c_key => $c_option) {
+    $context_dependencies[] = $c_key;
+  }
   if (!is_null($form_state['handler_id'])) {
     $default = $form_state['page']->handlers[$form_state['handler_id']]->conf['context_admin_options_items'] ? $form_state['page']->handlers[$form_state['handler_id']]->conf['context_admin_options_items'] : $cache->handlers[$form_state['handler_id']]->conf['context_admin_options_items'];
   }
@@ -31,24 +38,22 @@ function context_admin_node_create_menu_content_form(&$form, &$form_state, $cach
     '#options' => $options,
     '#default_value' => $default,
   );
-  if ($form_state['page']->subtask['subtask']->arguments) {
-    foreach($form_state['page']->subtask['subtask']->arguments as $context => $args) {
-      if ($context == 'node') {
-        if (!is_null($form_state['handler_id'])) {
-          $sub = $form_state['page']->handlers[$form_state['handler_id']]->conf['context_admin_sub_page'] ? $form_state['page']->handlers[$form_state['handler_id']]->conf['context_admin_sub_page'] : $cache->handlers[$form_state['handler_id']]->conf['context_admin_sub_page'];
-        }
-        else {
-          $sub = $form_state['page']->new_handler->conf['context_admin_sub_page'];
-        }
-        $form['context_admin_sub_page'] = array(
-          '#type' => 'checkbox',
-          '#title' => t('Create as sub node'),
-          '#description' => t('Creates a node as a sub node of the currently viewed node within the menu system.'),
-          '#default_value' => $sub,
-        );
-      }
-    }
+
+  if (!is_null($form_state['handler_id'])) {
+    $sub = $form_state['page']->handlers[$form_state['handler_id']]->conf['context_admin_sub_page'] ? $form_state['page']->handlers[$form_state['handler_id']]->conf['context_admin_sub_page'] : $cache->handlers[$form_state['handler_id']]->conf['context_admin_sub_page'];
   }
+  else {
+    $sub = $form_state['page']->new_handler->conf['context_admin_sub_page'];
+  }
+  $form['context_admin_sub_page'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Create as sub node'),
+    '#description' => t('Creates a node as a sub node of the currently viewed node within the menu system.'),
+    '#default_value' => $sub,
+    '#process' => array('ctools_dependent_process'),
+    '#dependency' => array('edit-context' => array(implode(', ', $context_dependencies))),
+  );
+
   return $form;
 }
 
@@ -101,21 +106,18 @@ function context_admin_node_create_menu_nodeapi(&$node, $op, $a3, $a4) {
     case 'insert':
       $page = page_manager_get_current_page();
       if ($page['handler']->conf['context_admin_sub_page']) {
-        foreach ($page['contexts'] as $context) {
-          if ($context->type == 'node') {
-            $parent_id = $context->argument;
-            $results = db_query("SELECT menu_name, mlid FROM {menu_links} WHERE link_path = 'node/%d' AND module = 'menu'", $parent_id);
-            $result = db_fetch_object($results);
-            if ($result) {
-              $item = array(
-                'link_title' => $node->title,
-                'menu_name' => $result->menu_name,
-                'plid' => $result->mlid,
-                'link_path' => 'node/'. $node->nid,
-              );
-              menu_link_save($item);
-            }
-          }
+        $context = $page['contexts'][$page['handler']->conf['submitted_context']];
+        $parent_id = $context->argument;
+        $results = db_query("SELECT menu_name, mlid FROM {menu_links} WHERE link_path = 'node/%d' AND module = 'menu'", $parent_id);
+        $result = db_fetch_object($results);
+        if ($result) {
+          $item = array(
+            'link_title' => $node->title,
+            'menu_name' => $result->menu_name,
+            'plid' => $result->mlid,
+            'link_path' => 'node/'. $node->nid,
+          );
+          menu_link_save($item);
         }
       }
       break;
