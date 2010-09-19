@@ -10,19 +10,21 @@ function context_admin_vbo_views_default_views() {
     $subtasks = page_manager_get_task_subtasks($task);
     foreach ($subtasks as $handler_id => $subtask) {
       $handlers = $subtask['subtask']->default_handlers;
-      foreach ($handlers as $handler) {
-        if ($handler->conf['context_admin_options'] == 'views_bulk_menu') {
-          $view_name = $handler->name;
-          $type = $handler->conf['context_admin_vbo_views_bulk_node_type'];
-          $pub = $handler->conf['context_admin_vbo_views_bulk_published'];
-          if ($pub == 'published') {
-            $pub = TRUE;
+      if ($handlers) {
+        foreach ($handlers as $handler) {
+          if ($handler->conf['context_admin_options'] == 'views_bulk_menu') {
+            $view_name = $handler->name;
+            $type = $handler->conf['context_admin_vbo_views_bulk_node_type'];
+            $pub = $handler->conf['context_admin_vbo_views_bulk_published'];
+            if ($pub == 'published') {
+              $pub = TRUE;
+            }
+            elseif ($pub == 'unpublished') {
+              $pub = FALSE;
+            }
+            $view = context_admin_vbo_default_view($view_name, $type, $pub);
+            $views[$view->name] = $view;
           }
-          elseif ($pub == 'unpublished') {
-            $pub = FALSE;
-          }
-          $view = context_admin_vbo_default_view($view_name, $type, $pub);
-          $views[$view->name] = $view;
         }
       }
     }

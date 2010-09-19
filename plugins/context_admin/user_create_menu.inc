@@ -320,7 +320,7 @@ function context_admin_user_edit_form($form_state, $handler, $base_contexts, $ar
 function context_admin_user_create_menu_form_alter(&$form, $form_state, $form_id) {
   $page = page_manager_get_current_page();
   if ($form_id == 'context_admin_user_create_menu_render_form' && $page) {
-    $form['roles']['#value'] = $page['handler']->conf['context_admin_user_roles'];
+    $form['roles']['#value'] = array_filter($page['handler']->conf['context_admin_user_roles']);
     $form['roles']['#value'][2] = TRUE;
     if (!$page['handler']->conf['context_admin_user_roles_alter']) {
       $form['roles']['#disabled'] = TRUE;
