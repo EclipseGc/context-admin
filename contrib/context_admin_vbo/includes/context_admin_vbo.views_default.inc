@@ -8,8 +8,9 @@ function context_admin_vbo_views_default_views() {
   $tasks = page_manager_get_tasks();
   foreach ($tasks as $task_id => $task) {
     $subtasks = page_manager_get_task_subtasks($task);
-    foreach ($subtasks as $handler_id => $subtask) {
-      $handlers = $subtask['subtask']->default_handlers;
+    foreach ($subtasks as $subtask_id => $subtask) {
+      $default_handlers = $subtask['subtask']->default_handlers ? $subtask['subtask']->default_handlers : NULL;
+      $handlers = page_manager_load_task_handlers($task, $subtask_id, $default_handlers);
       if ($handlers) {
         foreach ($handlers as $handler) {
           if ($handler->conf['context_admin_options'] == 'views_bulk_menu') {
@@ -324,5 +325,3 @@ function context_admin_vbo_default_view($view_name, $type, $pub) {
   ));
   return $view;
 }
-
-
