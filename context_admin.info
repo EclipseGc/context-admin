@@ -1,0 +1,12 @@
+;$Id: context_admin.info,v 1.3 2010/03/12 17:50:31 eclipsegc Exp $
+name = Contextual Administration
+description = A module for building and exporting menu items for a given contextual area of a site.
+core = 7.x
+package = Contextual Administration
+dependencies[] = page_manager
+
+version = "7.x-1.0-alpha1"
+core = "7.x"
+project = "context_admin"
+datestamp = "1285450260"
+

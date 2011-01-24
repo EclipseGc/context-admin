@@ -1,0 +1,135 @@
+<?php
+//$Id: context_admin.module,v 1.3 2010/09/12 06:41:49 eclipsegc Exp $
+
+/**
+ * Implementation of hook_views_api().
+ */
+function context_admin_views_api() {
+  return array(
+    'api' => 2,
+    'path' => drupal_get_path('module', 'context_admin') . '/includes',
+  );
+}
+
+function context_admin_ctools_plugin_directory($module, $plugin) {
+  if ($module == 'page_manager' || $module == 'ctools' || $module == 'context_admin') {
+    return 'plugins/' . $plugin;
+  }
+}
+
+/**
+ * Implements hook_ctools_plugin_type().
+ *
+ * Register layout, style, cache, and display_renderer plugin types, declaring
+ * relevant plugin type information as necessary.
+ */
+function context_admin_ctools_plugin_type() {
+  return array(
+    'context_admin' => array(),
+  );
+}
+
+function context_admin_get_path($file, $base_path = FALSE, $module = 'context_admin') {
+  $output = $base_path ? base_path() : '';
+  return $output . drupal_get_path('module', $module) . '/' . $file;
+}
+
+function context_admin_load($name) {
+  $cache = new stdClass();
+  $cache->task_name = $name;
+  return $cache;
+}
+
+function context_admin_get_page_cache($name) {
+  ctools_include('object-cache');
+  $cache = ctools_object_cache_get('context_admin', $name);
+  if (!$cache) {
+    $cache = context_admin_load($name);
+    $cache->locked = ctools_object_cache_test('context_admin', $name);
+  }
+
+  return $cache;
+}
+
+/**
+ * Store changes to a task handler in the object cache.
+ */
+function context_admin_set_page_cache($name, $page) {
+  $page->changed = TRUE;
+  ctools_include('object-cache');
+  $cache = ctools_object_cache_set('context_admin', $name, $page);
+}
+
+/**
+ * Remove an item from the object cache.
+ */
+function context_admin_clear_page_cache($name) {
+  ctools_include('object-cache');
+  ctools_object_cache_clear('context_admin', $name);
+}
+
+function context_admin_get_plugins($type, $options = array()) {
+  $id = isset($options['id']) ? $options['id'] : NULL;
+  ctools_include('plugins');
+  ctools_include('context');
+  if (is_null($id)) {
+    $plugins = ctools_get_plugins('context_admin', $type);
+  }
+  else {
+    $plugins = ctools_get_plugins('context_admin', $type, $id);
+  }
+  return $plugins;
+}
+
+function context_admin_get_contextual_plugins($contexts) {
+  $all_plugins = context_admin_get_plugins('context_admin');
+  $plugins = array();
+  foreach ($all_plugins as $id => $plugin) {
+    if (!empty($plugin['required context']) && !ctools_context_match_requirements($contexts, $plugin['required context'])) {
+      continue;
+    }
+    $plugins[$id] = $plugin;
+  }
+
+  return $plugins;
+}
+
+function context_admin_form_alter(&$form, $form_state, $form_id) {
+  // Checking to make sure that we're on a context_admin generated form
+  $page = page_manager_get_current_page();
+  $callback = '';
+  if ($page && isset($page['handler']->conf['context_admin_options'])) {
+    $callback = $page['handler']->conf['context_admin_options'];
+  }
+  elseif ($form_id == 'media_edit') {
+    $callback = 'noderef_create_media';
+  }
+
+  if ($callback) {
+    $plugin = context_admin_get_plugins('context_admin', array('id' => $callback));
+    $dir = module_invoke($plugin['module'], 'ctools_plugin_directory', 'context_admin', 'context_admin');
+    ctools_include($plugin['name'], $plugin['module'], $dir);
+    if (function_exists($plugin['module'] .'_'. $callback .'_form_alter')) {
+      $function = $plugin['module'] .'_'. $callback .'_form_alter';
+      $function($form, $form_state, $form_id);
+    }
+  }
+}
+
+function context_admin_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
+  $page = page_manager_get_current_page();
+  if ($page && isset($page['handler']->conf['context_admin_options']) && ($op != 'load')) {
+    $callback = $page['handler']->conf['context_admin_options'];
+    $plugin = context_admin_get_plugins('context_admin', array('id' => $callback));
+    $dir = module_invoke($plugin['module'], 'ctools_plugin_directory', 'context_admin', 'context_admin');
+    ctools_include($plugin['name'], $plugin['module'], $dir);
+    module_invoke($plugin['module'] .'_'. $callback, 'nodeapi', $node, $op, $a3, $a4);
+  }
+  elseif ($page && isset($page['handler']->conf['context_admin_options']) && $op == 'load') {
+    $callback = $page['handler']->conf['context_admin_options'];
+    $plugin = context_admin_get_plugins('context_admin', array('id' => $callback));
+    $dir = module_invoke($plugin['module'], 'ctools_plugin_directory', 'context_admin', 'context_admin');
+    ctools_include($plugin['name'], $plugin['module'], $dir);
+    return module_invoke($plugin['module'] .'_'. $callback, 'nodeapi', $node, $op, $a3, $a4);
+  }
+}

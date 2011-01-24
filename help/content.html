@@ -1,0 +1,11 @@
+<!-- $Id: content.html,v 1.1 2010/03/11 04:42:45 eclipsegc Exp $ -->
+<p>Content plugins are fairly straight forward.  Unlike page_manager's default "content_type" plugins, context_admin plugins are intended to be a single use scenario (one of the many reasons they aren't content type plugins).  For example, we don't actually want to place two node creation forms on the same page together as they won't actually function at the same time.  With this being said, a single plugin can actually function for a number of different use cases at once.  I'll provide three examples.</p>
+<ol>
+  <li><strong>Term Options:</strong><br />
+  The term options plugin can actually function for term edits, adding sub terms, and editing the vocabulary of the term in question.  Its secondary options page lets you choose one of these options.  I've tried to group "like" tasks into single plugins, but this is certainly not a requirement.</li>
+  <li><strong>Vocabulary Options:</strong><br />
+  The vocabulary options plugin provides most of the typical vocabulary administration tools, List Terms, Edit Vocabulary, Add terms.</li>
+  <li><strong>Node Create:</strong><br />
+  The node creation plugin is actually kind of special in that, it lets you create any node type in the entire system, but beyond that, it has some additional logic that checks the path being used and if we're on a path like node/%node/add_page it could actually add the new page node as a sub-menu item of the node it's created from (assuming that node is part of a menu).</li>
+</ol>
+<p>These are just a handful of illustrations of what the context_admin plugins can do.</p>
